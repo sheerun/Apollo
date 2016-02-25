@@ -7,6 +7,7 @@
     dest: "{{ weave_bin }}"
     mode: 0755
     validate_certs: no
+    force: true 
   environment: "{{ proxy_env }}"
   tags:
     - weave
@@ -24,6 +25,10 @@
       dest: "/etc/systemd/system/weaveproxy.service"
   tags:
     - weave
+  notify:
+    - reload systemd
+    - restart weave service
+    - restart weaveproxy service
 
 - name: ensure weave service is running.
   become: yes
@@ -42,6 +47,11 @@
     enabled: yes
   tags:
     - weave
+  notify:
+    - reload systemd
+    - restart consul
+    - restart mesos-slave
+    - restart registrator
 
 - name: wait for weave socket to be ready.
   wait_for:
@@ -50,7 +60,7 @@
 
 # Flush handlers so we restart the Docker process here with the weave network
 # enabled and containers correctly start in the weave network.
-- meta: flush_handlers
+#- meta: flush_handlers
 
 # scope
 - include: scope.yml
